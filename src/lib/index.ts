@@ -1,4 +1,3 @@
-// Reexport your entry components here
-import { load, Config } from './fetchredirectmap.js';
+import { load } from './utilities/loadRedirectMap';
 
-export { load, Config };
+export { load };

@@ -1,6 +1,6 @@
 {
   "name": "storyblok-redirectmap",
-  "version": "0.0.1-snap",
+  "version": "1.0.0",
   "description": "Redirect map",
   "main": "index.js",
   "scripts": {
