@@ -1,17 +1,50 @@
 import type { Handle } from '@sveltejs/kit';
 import {redirect} from '@sveltejs/kit';
-//import { writable } from 'svelte/store';
 import { apiPlugin, storyblokInit, useStoryblokApi } from '@storyblok/svelte';
 import type { ISbResult } from '@storyblok/svelte';
 
-//export const storyblokDatasourceEntries = writable<Map<string, string>>(new Map<string, string>());
-
 const emptyResponse: ISbResult = { data: undefined, perPage: 0, total: 0, headers: new Headers() };
 
-const DATASOURCE_PATH = 'redirectmap';
-const STORYBLOK_API_KEY = 'ozHt8VvbARQxWitorMFb9gtt';
+export interface Configuration {
+    datasource_path: string;
+    api_key: string;
+}
 
-export async function getDatasourceData(
+async function initStoryblok(storyblokKey: string): Promise<void> {
+    await storyblokInit({
+        accessToken: storyblokKey,
+        use: [apiPlugin],
+        apiOptions: {
+            region: 'eu'
+        }
+    });
+}
+
+async function isStoryblokAlreadyInit(): Promise<boolean> {
+    const storyblokApi = await useStoryblokApi();
+    return storyblokApi !== null;
+}
+
+export class Config {
+    private datasource_path: string;
+    private api_key: string;
+    constructor(private configuration: Configuration) {
+        this.datasource_path = configuration.datasource_path || 'https://default-api.com';
+        this.api_key = configuration.api_key || 'default-api-key';
+    }
+
+
+    getConfig() {
+        return {
+            datasource: this.datasource_path,
+            apiKey: this.api_key,
+        };
+    }
+    
+
+}
+
+async function getDatasourceData(
     path: string
 ): Promise<ISbResult> {
     const storyblokApi = await useStoryblokApi();
@@ -28,32 +61,19 @@ export async function getDatasourceData(
         });
 }
 
-export async function initStoryblok(): Promise<void> {
-    await storyblokInit({
-        accessToken: STORYBLOK_API_KEY,
-        use: [apiPlugin],
-        apiOptions: {
-            region: 'eu'
-        }
-    });
-}
 
-export async function isStoryblokAlreadyInit(): Promise<boolean> {
-    const storyblokApi = await useStoryblokApi();
-    return storyblokApi !== null;
-}
 
-export const load = async () : Promise<Map<string, string>> => {
+export const load = async (storyblokKey: string, datasourcePath: string ) : Promise<Map<string, string>> => {
     let mapOfEntries: Map<string, string> = new Map();
     await isStoryblokAlreadyInit().then((isInit) => {
         if (!isInit) {
-            initStoryblok();
+            initStoryblok(storyblokKey);
         }
     });
 
     // Get storyblok datasource entries and store them for global usage
     await getDatasourceData(
-        DATASOURCE_PATH
+        datasourcePath
     ).then((response) => {
         if (response.data?.datasource_entries) {
             mapOfEntries = new Map(
@@ -68,12 +88,12 @@ export const load = async () : Promise<Map<string, string>> => {
 };
 
 
-
+/** 
 export const redirectHandle: Handle = async ({event, resolve}) => {
-    const entries = await load();    
+    const entries = await load(storyblokKey: string, datasourcePath: string);    
     if( entries.get(event.url.pathname) ) {
         const redirectPath = entries.get(event.url.pathname);
-        redirect(302, redirectPath || '/');
+        redirect(301, redirectPath || '/');
     }
-    return await resolve(event);
-}
+    return resolve(event);
+} */
