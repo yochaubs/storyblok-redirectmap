@@ -1,2 +1,3 @@
 # storyblok-redirectmap
+
 Redirect map

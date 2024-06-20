@@ -2,26 +2,31 @@ import { Config } from '$lib/config';
 import { StoryblokService } from '$lib/services/storyblokServices';
 import type { ISbResult } from '@storyblok/svelte';
 
-export const load = async (storyblokKey: string, datasourcePath: string): Promise<Map<string, string>> => {
-    const config = new Config({ datasource_path: datasourcePath, api_key: storyblokKey });
-    const storyblokService = new StoryblokService(config.getConfig().apiKey);
-    
-    let mapOfEntries: Map<string, string> = new Map();
+export const load = async (
+  storyblokKey: string,
+  datasourcePath: string,
+): Promise<Map<string, string>> => {
+  const config = new Config({ datasource_path: datasourcePath, api_key: storyblokKey });
+  const storyblokService = new StoryblokService(config.getConfig().apiKey);
 
-    await storyblokService.initStoryblok();
-    
-    const response: ISbResult = await storyblokService.getDatasourceData(config.getConfig().datasource);
+  let mapOfEntries: Map<string, string> = new Map();
 
-    if (response.data?.datasource_entries) {
-        mapOfEntries = new Map(
-            response.data.datasource_entries.map((entry: { name: string; value: string }) => [
-                entry.name,
-                entry.value
-            ])
-        );
-    }
-    
-    return mapOfEntries;
+  await storyblokService.initStoryblok();
+
+  const response: ISbResult = await storyblokService.getDatasourceData(
+    config.getConfig().datasource,
+  );
+
+  if (response.data?.datasource_entries) {
+    mapOfEntries = new Map(
+      response.data.datasource_entries.map((entry: { name: string; value: string }) => [
+        entry.name,
+        entry.value,
+      ]),
+    );
+  }
+
+  return mapOfEntries;
 };
 
 /** 
